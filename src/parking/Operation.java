@@ -6,7 +6,7 @@ import java.util.StringTokenizer;
 /**
  * Processes commands entered through the terminal.
  *
- * @author wyattzhang
+ * @author wyattzhang, ethanvu
  */
 public class Operation {
 
