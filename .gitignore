@@ -27,3 +27,4 @@ replay_pid*
 
 _MACOSX/
 .DS_store/
+out/

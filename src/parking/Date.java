@@ -1,5 +1,6 @@
 package parking;
 
+import java.text.DecimalFormat;
 import java.util.Calendar;
 
 /**
@@ -45,13 +46,68 @@ public class Date implements Comparable<Date> {
     }
 
     /**
+     * Returns the year of this date.
+     *
+     * @return the year
+     */
+    public int getYear() {
+        return this.year;
+    }
+
+    /**
+     * Returns the month of this date.
+     *
+     * @return the month
+     */
+    public int getMonth() {
+        return this.month;
+    }
+
+    /**
+     * Returns the day of this date.
+     *
+     * @return the day
+     */
+    public int getDay() {
+        return this.day;
+    }
+
+    /**
      * Determines whether the year of this date is a leap year.
      *
      * @return true if the year is a leap year; false otherwise
      */
     private boolean isLeap() {
+        if (this.year % QUADRENNIAL == 0) {
+            if (this.year % CENTENNIAL == 0){
+                return this.year % QUATERCENTENNIAL == 0;
+            }
+            else {
+                return true;
+            }
+        }
         return false;
     }
+
+    /**
+     * Determine the number of days in the month of this date.
+     *
+     * @return 31 or 30 days
+     */
+    private int numberOfDays(){
+        if (month == 2) {
+            return this.isLeap()
+                    ? 29
+                    : 28;
+        }
+        return (this.month == 4
+                || this.month == 6
+                || this.month == 9
+                || this.month == 11)
+                ? 30
+                : 31;
+    }
+
 
     /**
      * Compares this date with another date in chronological order.
@@ -62,6 +118,14 @@ public class Date implements Comparable<Date> {
      */
     @Override
     public int compareTo(Date other) {
+        int thisDate = this.year * 10000 + this.month * 100 + this.day;
+        int otherDate = other.year * 10000 + other.month * 100 + other.day;
+        if (thisDate < otherDate) {
+            return -1;
+        }
+        if (thisDate > otherDate) {
+            return 1;
+        }
         return 0;
     }
 
@@ -84,9 +148,9 @@ public class Date implements Comparable<Date> {
 
         Date other = (Date) obj;
 
-        return year == other.year
-                && month == other.month
-                && day == other.day;
+        return this.year == other.year
+                && this.month == other.month
+                && this.day == other.day;
     }
 
     /**
@@ -96,7 +160,10 @@ public class Date implements Comparable<Date> {
      */
     @Override
     public String toString() {
-        return "";
+        DecimalFormat twoDigits = new DecimalFormat("00");
+        return year + "-"
+                + twoDigits.format(month) + "-"
+                + twoDigits.format(day);
     }
 
     /**
@@ -106,7 +173,13 @@ public class Date implements Comparable<Date> {
      * @return true if this date is valid; false otherwise
      */
     public boolean isValid() {
-        return false;
+        if (this.year <= 0 || this.year >= 10000) {
+            return false;
+        }
+        if (this.month < JAN || this.month >= JAN + 12) {
+            return false;
+        }
+        return this.day >= 0 && this.day <= this.numberOfDays();
     }
 
     /**
@@ -116,6 +189,35 @@ public class Date implements Comparable<Date> {
      * @param args command-line arguments; not used
      */
     public static void main(String[] args) {
-        // TODO: Add four invalid and two valid test cases.
+        Date[] testDates = {
+                new Date(0, 1, 1),       // Invalid year
+                new Date(2026, 13, 1),   // Invalid month
+                new Date(2026, 4, 31),   // April has only 30 days
+                new Date(2025, 2, 29),   // 2025 is not a leap year
+                new Date(2024, 2, 29),   // Valid leap-year date
+                new Date(2026, 9, 15)    // Valid regular date
+        };
+
+        boolean[] expectedResults = {
+                false,
+                false,
+                false,
+                false,
+                true,
+                true
+        };
+
+        for (int i = 0; i < testDates.length; i++) {
+            boolean actualResult = testDates[i].isValid();
+
+            System.out.println(
+                    "Test " + (i + 1)
+                            + ": Date = " + testDates[i]
+                            + ", Expected = " + expectedResults[i]
+                            + ", Actual = " + actualResult
+                            + ", Result = "
+                            + (actualResult == expectedResults[i] ? "PASS" : "FAIL")
+            );
+        }
     }
 }

@@ -2,7 +2,7 @@ package parking;
 
 /**
  *
- * @author wyattzhang
+ * @author wyattzhang, ethanvu
  */
 
 public class RunProject1 {
