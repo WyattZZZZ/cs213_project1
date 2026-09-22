@@ -6,6 +6,9 @@ package parking;
  * @author Ethan Vu
  */
 public class Vehicle {
+    private static final int PLATE_LENGTH = 7;
+    private static final int FIRST_HYPHEN_INDEX = 3;
+
     private String plate;
     private History history;
 
@@ -17,6 +20,35 @@ public class Vehicle {
     public Vehicle(String plate) {
         this.plate = plate;
         this.history = null;
+    }
+
+    /**
+     * Validates if a license plate matches the required format "Xdd-XXX".
+     * Format rules: 7 total characters, index 0 is a letter, index 1-2 are digits,
+     * index 3 is a hyphen, and index 4-6 are letters.
+     *
+     * @param plate the license plate string to validate
+     * @return true if valid format; false otherwise
+     */
+    public static boolean isValidPlate(String plate) {
+        if (plate == null || plate.length() != PLATE_LENGTH) {
+            return false;
+        }
+        if (plate.charAt(FIRST_HYPHEN_INDEX) != '-') {
+            return false;
+        }
+        if (!Character.isLetter(plate.charAt(0))) {
+            return false;
+        }
+        if (!Character.isDigit(plate.charAt(1)) || !Character.isDigit(plate.charAt(2))) {
+            return false;
+        }
+        for (int i = 4; i < PLATE_LENGTH; i++) {
+            if (!Character.isLetter(plate.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -47,7 +79,7 @@ public class Vehicle {
     }
 
     /**
-     * Adds a parking activity to the vehicle's history in descending order of entry timestamp.
+     * Adds a parking activity to the vehicle's history in descending order.
      *
      * @param parking the parking activity to insert
      */
@@ -57,14 +89,11 @@ public class Vehicle {
             history = newNode;
             return;
         }
-
-        // Uses Timestamp.compareTo() via parking.getEnter()
         if (parking.getEnter().compareTo(history.getParking().getEnter()) > 0) {
             newNode.setNext(history);
             history = newNode;
             return;
         }
-
         History current = history;
         while (current.getNext() != null
                 && current.getNext().getParking().getEnter().compareTo(parking.getEnter()) >= 0) {
