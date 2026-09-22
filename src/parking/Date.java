@@ -11,7 +11,7 @@ import java.util.Calendar;
  */
 public class Date implements Comparable<Date> {
 
-    /** Number of years in the standard leap-year cycle. */
+    /** Number of years in a standard leap-year cycle. */
     public static final int QUADRENNIAL = 4;
 
     /** Number of years in a century. */
@@ -23,6 +23,45 @@ public class Date implements Comparable<Date> {
     /** Integer value representing January. */
     public static final int JAN = Calendar.JANUARY + 1;
 
+    /** Integer value representing February. */
+    public static final int FEB = Calendar.FEBRUARY + 1;
+
+    /** Integer value representing April. */
+    public static final int APR = Calendar.APRIL + 1;
+
+    /** Integer value representing June. */
+    public static final int JUN = Calendar.JUNE + 1;
+
+    /** Integer value representing September. */
+    public static final int SEP = Calendar.SEPTEMBER + 1;
+
+    /** Integer value representing November. */
+    public static final int NOV = Calendar.NOVEMBER + 1;
+
+    /** Integer value representing December. */
+    public static final int DEC = Calendar.DECEMBER + 1;
+
+    /** The smallest valid day of a month. */
+    private static final int MIN_DAY = 1;
+
+    /** The smallest valid year. */
+    private static final int MIN_YEAR = 1;
+
+    /** The first invalid five-digit year. */
+    private static final int MAX_YEAR_EXCLUSIVE = 10000;
+
+    /** Number of days in February during a non-leap year. */
+    private static final int DAYS_IN_FEB = 28;
+
+    /** Number of days in February during a leap year. */
+    private static final int DAYS_IN_LEAP_FEB = 29;
+
+    /** Number of days in a short month. */
+    private static final int DAYS_IN_SHORT_MONTH = 30;
+
+    /** Number of days in a long month. */
+    private static final int DAYS_IN_LONG_MONTH = 31;
+
     /** The year of this date. */
     private int year;
 
@@ -33,7 +72,7 @@ public class Date implements Comparable<Date> {
     private int day;
 
     /**
-     * Creates a Date object with the specified year, month, and day.
+     * Creates a date with the specified year, month, and day.
      *
      * @param year the year of the date
      * @param month the month of the date
@@ -78,36 +117,57 @@ public class Date implements Comparable<Date> {
      * @return true if the year is a leap year; false otherwise
      */
     private boolean isLeap() {
-        if (this.year % QUADRENNIAL == 0) {
-            if (this.year % CENTENNIAL == 0){
-                return this.year % QUATERCENTENNIAL == 0;
-            }
-            else {
-                return true;
-            }
+        if (this.year % QUATERCENTENNIAL == 0) {
+            return true;
         }
-        return false;
+
+        return this.year % QUADRENNIAL == 0
+                && this.year % CENTENNIAL != 0;
     }
 
     /**
-     * Determine the number of days in the month of this date.
+     * Returns the number of days in the month of this date.
      *
-     * @return 31 or 30 days
+     * @return the maximum number of days in the month
      */
-    private int numberOfDays(){
-        if (this.month == 2) {
+    private int numberOfDays() {
+        if (this.month == FEB) {
             return this.isLeap()
-                    ? 29
-                    : 28;
+                    ? DAYS_IN_LEAP_FEB
+                    : DAYS_IN_FEB;
         }
-        return (this.month == 4
-                || this.month == 6
-                || this.month == 9
-                || this.month == 11)
-                ? 30
-                : 31;
+
+        if (this.month == APR
+                || this.month == JUN
+                || this.month == SEP
+                || this.month == NOV) {
+            return DAYS_IN_SHORT_MONTH;
+        }
+
+        return DAYS_IN_LONG_MONTH;
     }
 
+    /**
+     * Determines whether this date is a valid calendar date.
+     *
+     * @return true if this date is valid; false otherwise
+     */
+    public boolean isValid() {
+        if (this.year < MIN_YEAR
+                || this.year >= MAX_YEAR_EXCLUSIVE) {
+            return false;
+        }
+
+        if (this.month < JAN || this.month > DEC) {
+            return false;
+        }
+
+        if (this.day < MIN_DAY) {
+            return false;
+        }
+
+        return this.day <= this.numberOfDays();
+    }
 
     /**
      * Compares this date with another date in chronological order.
@@ -118,23 +178,40 @@ public class Date implements Comparable<Date> {
      */
     @Override
     public int compareTo(Date other) {
-        int thisDate = this.year * 10000 + this.month * 100 + this.day;
-        int otherDate = other.year * 10000 + other.month * 100 + other.day;
-        if (thisDate < otherDate) {
+        if (this.year < other.year) {
             return -1;
         }
-        if (thisDate > otherDate) {
+
+        if (this.year > other.year) {
             return 1;
         }
+
+        if (this.month < other.month) {
+            return -1;
+        }
+
+        if (this.month > other.month) {
+            return 1;
+        }
+
+        if (this.day < other.day) {
+            return -1;
+        }
+
+        if (this.day > other.day) {
+            return 1;
+        }
+
         return 0;
     }
 
     /**
      * Determines whether this date is equal to another object.
-     * Two dates are equal when their years, months, and days are equal.
+     * Two dates are equal when their year, month, and day are equal.
      *
      * @param obj the object to compare with this date
-     * @return true if the object represents the same date; false otherwise
+     * @return true if the object represents the same date;
+     *         false otherwise
      */
     @Override
     public boolean equals(Object obj) {
@@ -154,48 +231,39 @@ public class Date implements Comparable<Date> {
     }
 
     /**
-     * Returns a textual representation of this date.
+     * Returns this date in YYYY-MM-DD format.
      *
-     * @return the date formatted as YYYY-MM-DD
+     * @return the formatted date
      */
     @Override
     public String toString() {
-        DecimalFormat twoDigits = new DecimalFormat("00");
-        return this.year + "-"
-                + twoDigits.format(this.month) + "-"
+        DecimalFormat fourDigits =
+                new DecimalFormat("0000");
+
+        DecimalFormat twoDigits =
+                new DecimalFormat("00");
+
+        return fourDigits.format(this.year)
+                + "-"
+                + twoDigits.format(this.month)
+                + "-"
                 + twoDigits.format(this.day);
     }
 
     /**
-     * Determines whether this date is a valid calendar date.
-     * This method checks the month, day, and leap-year rules.
-     *
-     * @return true if this date is valid; false otherwise
-     */
-    public boolean isValid() {
-        if (this.year <= 0 || this.year >= 10000) {
-            return false;
-        }
-        if (this.month < JAN || this.month >= JAN + 12) {
-            return false;
-        }
-        return this.day >= 0 && this.day <= this.numberOfDays();
-    }
-
-    /**
-     * Runs the required test cases for the Date class.
-     * The tests should include four invalid dates and two valid dates.
+     * Runs six test cases for the isValid method.
+     * The testbed includes four invalid dates and two valid dates.
      *
      * @param args command-line arguments; not used
      */
     public static void main(String[] args) {
         Date[] testDates = {
-                new Date(0, 1, 1),       // Invalid year
-                new Date(2026, 13, 1),   // Invalid month
-                new Date(2026, 4, 31),   // April has only 30 days
-                new Date(2025, 2, 29),   // 2025 is not a leap year
-                new Date(2024, 2, 29),   // Valid leap-year date
-                new Date(2026, 9, 15)    // Valid regular date
+                new Date(0, JAN, MIN_DAY),
+                new Date(2026, DEC + 1, MIN_DAY),
+                new Date(2026, APR, DAYS_IN_LONG_MONTH),
+                new Date(2025, FEB, DAYS_IN_LEAP_FEB),
+                new Date(2024, FEB, DAYS_IN_LEAP_FEB),
+                new Date(2026, SEP, 15)
         };
 
         boolean[] expectedResults = {
@@ -208,16 +276,23 @@ public class Date implements Comparable<Date> {
         };
 
         for (int i = 0; i < testDates.length; i++) {
-            boolean actualResult = testDates[i].isValid();
+            boolean actualResult =
+                    testDates[i].isValid();
+
+            String result = actualResult
+                    == expectedResults[i]
+                    ? "PASS"
+                    : "FAIL";
 
             System.out.println(
                     "Test " + (i + 1)
                             + ": Date = " + testDates[i]
-                            + ", Expected = " + expectedResults[i]
-                            + ", Actual = " + actualResult
+                            + ", Expected = "
+                            + expectedResults[i]
+                            + ", Actual = "
+                            + actualResult
                             + ", Result = "
-                            + (actualResult == expectedResults[i] ? "PASS" : "FAIL")
-            );
+                            + result);
         }
     }
 }

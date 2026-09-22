@@ -9,19 +9,19 @@ import java.text.DecimalFormat;
  */
 public class Timestamp implements Comparable<Timestamp> {
 
-    /**
-     * The calendar date.
-     */
+    /** Number of hours in one day. */
+    private static final int HOURS_PER_DAY = 24;
+
+    /** Number of minutes in one hour. */
+    private static final int MINUTES_PER_HOUR = 60;
+
+    /** The calendar date */
     private Date date;
 
-    /**
-     * The hour in 24-hour format.
-     */
+    /** The hour in 24-hour format */
     private byte hour;
 
-    /**
-     * The minute of the hour.
-     */
+    /** The minute of the hour. */
     private byte minute;
 
     /**
@@ -85,6 +85,18 @@ public class Timestamp implements Comparable<Timestamp> {
         } else {
             return this.date.compareTo(other.date);
         }
+    }
+
+    /**
+     * Determines whether the hour and minute are valid.
+     *
+     * @return true if the time is valid; false otherwise
+     */
+    public boolean isValidTime() {
+        return this.hour >= 0
+                && this.hour < HOURS_PER_DAY
+                && this.minute >= 0
+                && this.minute < MINUTES_PER_HOUR;
     }
 
     /**

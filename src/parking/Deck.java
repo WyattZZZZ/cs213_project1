@@ -1,5 +1,8 @@
 package parking;
 
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+
 /**
  * Represents a parking deck.
  *
@@ -9,6 +12,9 @@ public class Deck {
 
     /** Maximum permitted capacity of any parking deck. */
     public static final int MAXCAPACITY = 6;
+
+    /** Value returned when a parking activity is not found. */
+    private static final int NOTFOUND = -1;
 
     /** The deck identification number. */
     private int number;
@@ -27,6 +33,7 @@ public class Deck {
 
     /** Whether the deck is open. */
     private boolean open;
+    private ExecutionException executionException;
 
     /**
      * Creates a parking deck.
@@ -111,29 +118,56 @@ public class Deck {
      */
     private int find(Vehicle vehicle) {
         for (int i = 0; i < this.parkings.length; i++){
-            if (this.parkings[i].getVehicle().getPlate() == vehicle.getPlate() {
+            if (Objects.equals(this.parkings[i].getVehicle().getPlate(),
+                    vehicle.getPlate())) {
                 return i;
             }
         }
-        return -1;
+        return NOTFOUND;
     }
 
+
     /**
-     * Records a vehicle entering the deck.
+     * Adds a parking activity to this deck.
      *
      * @param parking the parking activity to add
      */
     public void enter(Parking parking) {
-        // TODO: Add the parking activity. Must be implemented after Hour Class
+        if (parking == null) {
+            return;
+        }
+        if (this.numParked >= this.parkings.length) {
+            return;
+        }
+        if (this.find(parking.getVehicle()) != -1) {
+            return;
+        }
+
+        this.parkings[this.numParked] = parking;
+        this.numParked++;
     }
 
     /**
-     * Records a vehicle exiting the deck.
+     * Removes a parking activity from this deck.
      *
      * @param parking the parking activity to remove
      */
     public void exit(Parking parking) {
-        // TODO: Remove the parking activity. Must be implemented after Hour Class
+        if (parking == null || this.numParked == 0) {
+            return;
+        }
+
+        int parkingIndex = this.find(parking.getVehicle());
+
+        if (parkingIndex == -1) {
+            return;
+        }
+
+        int lastIndex = this.numParked - 1;
+
+        this.parkings[parkingIndex] = this.parkings[lastIndex];
+        this.parkings[lastIndex] = null;
+        this.numParked--;
     }
 
     /**
@@ -143,6 +177,24 @@ public class Deck {
      */
     @Override
     public String toString() {
-        return "";
+        String vehicleWord =
+                this.numParked == 1
+                        ? " vehicle"
+                        : " vehicles";
+
+        return "Deck#"
+                + this.number
+                + "@"
+                + this.location
+                + "[open "
+                + this.hour
+                + "] [capacity "
+                + this.parkings.length
+                + "] ["
+                + this.numParked
+                + vehicleWord
+                + "] ["
+                + this.location.getCounty()
+                + "]";
     }
 }
