@@ -1,5 +1,7 @@
 package parking;
 
+import java.lang.*;
+
 /**
  * Stores parking decks in a resizable array.
  *
@@ -23,8 +25,8 @@ public class DeckList {
      * Creates an empty deck list.
      */
     public DeckList() {
-        decks = new Deck[ARRAYLENGTH];
-        numDecks = 0;
+        this.decks = new Deck[ARRAYLENGTH];
+        this.numDecks = 0;
     }
 
     /**
@@ -34,6 +36,11 @@ public class DeckList {
      * @return the deck's index, or NOTFOUND if it is absent
      */
     private int find(Deck deck) {
+        for (int i = 0; i < this.numDecks; i++) {
+            if (this.decks[i].getNumber() == deck.getNumber()) {
+                return i;
+            }
+        }
         return NOTFOUND;
     }
 
@@ -41,7 +48,11 @@ public class DeckList {
      * Increases the array capacity by ARRAYLENGTH.
      */
     private void grow() {
-        // TODO: Resize without using System.arraycopy().
+        Deck[] new_decks = new Deck[this.decks.length + ARRAYLENGTH];
+        for (int i = 0; i < this.decks.length; i++){
+            new_decks[i] = this.decks[i];
+        }
+        this.decks = new_decks;
     }
 
     /**
@@ -50,7 +61,15 @@ public class DeckList {
      * @param deck the deck to open
      */
     public void open(Deck deck) {
-        // TODO: Open or add the deck.
+        if (this.numDecks == this.decks.length){
+            this.grow();
+        }
+        if (this.find(deck) != -1){
+            deck.setOpen(true);
+        } else {
+            this.decks[this.numDecks] = deck;
+        }
+        this.numDecks++;
     }
 
     /**
@@ -58,8 +77,13 @@ public class DeckList {
      *
      * @param deck the deck to close
      */
-    public void close(Deck deck) {
-        // TODO: Mark the deck as closed.
+    public void close(Deck deck) throws IllegalArgumentException{
+        if (this.find(deck) != -1){
+            deck.setOpen(false);
+        } else {
+            throw new IllegalArgumentException("Deck not found.");
+        }
+
     }
 
     /**
@@ -69,15 +93,87 @@ public class DeckList {
      * @return true if the deck exists; false otherwise
      */
     public boolean contains(Deck deck) {
-        return false;
+        return this.find(deck) != -1;
     }
 
     /**
-     * Prints open decks ordered by county and deck number.
+     * Compare by county and then by deck number
+     *
+     * @param a the first deck to compare
+     * @param b the second deck to compare
+     */
+    private static int compareCountyThenId(Deck a, Deck b) {
+        int countyResult = a.getLocation().getCounty()
+                .compareToIgnoreCase(b.getLocation().getCounty());
+        if (countyResult != 0) {
+            return countyResult;
+        }
+        if (a.getNumber() < b.getNumber()) {
+            return -1;
+        }
+        if (a.getNumber() > b.getNumber()) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Sorts decks by county and then by deck number
+     * using selection sort.
+     */
+    private void sortByLocation() {
+        for (int i = 0; i < this.numDecks - 1; i++) {
+            int smallest = i;
+
+            for (int j = i + 1; j < this.numDecks; j++) {
+                if (compareCountyThenId(this.decks[j], this.decks[smallest]) < 0) {
+                    smallest = j;
+                }
+            }
+
+            if (smallest != i) {
+                Deck temporary = this.decks[i];
+                this.decks[i] = this.decks[smallest];
+                this.decks[smallest] = temporary;
+            }
+        }
+    }
+
+    /**
+     * Prints open decks ordered by county and then deck number.
      */
     public void printByLocation() {
-        // TODO: Sort in place and print.
+        sortByLocation();
+
+        for (int i = 0; i < this.numDecks; i++) {
+            if (this.decks[i].isOpen()) {
+                System.out.println(this.decks[i]);
+            }
+        }
     }
+
+    /**
+     * Sorts plates by strings
+     * using selection sort.
+     */
+    private void sortVehicles(String[] plates) {
+        for (int i = 0; i < plates.length; i++){
+            int min = i;
+
+            for (int j = i + 1; j < plates.length; j++){
+                if (plates[i].compareTo(plates[j]) < 0){
+                    min = j;
+                }
+            }
+
+            if (min != i) {
+                String temporary = plates[i];
+                plates[i] = plates[min];
+                plates[min] = temporary;
+            }
+        }
+    }
+
 
     /**
      * Prints vehicles parked in a specified deck.
@@ -85,6 +181,15 @@ public class DeckList {
      * @param deck the specified parking deck
      */
     public void printVehicles(Deck deck) {
-        // TODO: Print vehicles ordered by plate.
+        Parking[] parkings = deck.getParkings();
+        String[] plates = new String[parkings.length];
+        for (int i = 0; i < parkings.length; i++) {
+            plates[i] = parkings[i].getVehicle().getPlate();
+        }
+        sortVehicles(plates);
+        for (String s : plates) {
+            System.out.println(s);
+        }
+
     }
 }

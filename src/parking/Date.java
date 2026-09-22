@@ -95,7 +95,7 @@ public class Date implements Comparable<Date> {
      * @return 31 or 30 days
      */
     private int numberOfDays(){
-        if (month == 2) {
+        if (this.month == 2) {
             return this.isLeap()
                     ? 29
                     : 28;
@@ -161,9 +161,9 @@ public class Date implements Comparable<Date> {
     @Override
     public String toString() {
         DecimalFormat twoDigits = new DecimalFormat("00");
-        return year + "-"
-                + twoDigits.format(month) + "-"
-                + twoDigits.format(day);
+        return this.year + "-"
+                + twoDigits.format(this.month) + "-"
+                + twoDigits.format(this.day);
     }
 
     /**

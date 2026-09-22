@@ -17,6 +17,43 @@ public class Parking {
     private Timestamp exit;
 
     /**
+     * Returns the vehicle involved in this parking activity.
+     *
+     * @return the vehicle involved in the parking activity
+     */
+    public Vehicle getVehicle() {
+        return this.vehicle;
+    }
+
+    /**
+     * Returns the timestamp at which the vehicle entered the parking deck.
+     *
+     * @return the entry timestamp
+     */
+    public Timestamp getEnter() {
+        return this.enter;
+    }
+
+    /**
+     * Returns the timestamp at which the vehicle exited the parking deck.
+     *
+     * @return the exit timestamp, or null if the vehicle has not exited
+     */
+    public Timestamp getExit() {
+        return this.exit;
+    }
+
+    /**
+     * Set the timestamp when the vehicle exited the parking deck.
+     *
+     * @param t timestamp of exiting
+     */
+    public void setExit(Timestamp t) {
+        this.exit = t;
+    }
+
+
+    /**
      * Creates a parking activity without an exit timestamp.
      *
      * @param vehicle the vehicle entering the deck
@@ -35,6 +72,17 @@ public class Parking {
      */
     @Override
     public String toString() {
-        return "";
+        if (this.exit == null){
+            return this.vehicle.getPlate()
+                    + " [entered: "
+                    + this.enter.toString()
+                    + "][exited: None";
+        } else {
+            return this.vehicle.getPlate()
+                    + " [entered: "
+                    + this.enter.toString()
+                    + "][exited: "
+                    + this.exit.toString();
+        }
     }
 }
