@@ -3,7 +3,7 @@ package parking;
 /**
  * Represents predefined deck operating hour codes and time intervals.
  *
- * @author Ethan Vu
+ * @author Ethan Vu, Wyatt Zhang
  */
 public enum Hour {
     HR5("5:00", "21:30", (byte) 5, (byte) 0, (byte) 21, (byte) 30),

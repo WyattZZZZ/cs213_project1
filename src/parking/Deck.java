@@ -53,6 +53,16 @@ public class Deck {
     }
 
     /**
+     * Check if the ID number is valid
+     *
+     * @return the deck number
+     */
+    public static boolean isValidDeckNumber(String token) {
+        return token != null
+                && token.matches("^[0-9]+$");
+    }
+
+    /**
      * Returns the identification number of this deck.
      *
      * @return the deck number

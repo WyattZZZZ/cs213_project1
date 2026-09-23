@@ -1,5 +1,7 @@
 package parking;
 
+import java.util.Objects;
+
 /**
  * Stores parking decks in a resizable array.
  *
@@ -122,17 +124,17 @@ public class DeckList {
     /**
      * Returns the deck stored in the list that has the same number.
      *
-     * @param deck the deck to locate
+     * @param number the deck to locate
      * @return the stored deck, or null if it does not exist
      */
-    public Deck get(Deck deck) {
-        int index = this.find(deck);
-
-        if (index == NOTFOUND) {
+    public Deck get(int number) {
+        for (int i = 0; i < this.numDecks; i++) {
+            if (this.decks[i].getNumber()
+                    == number) {
+                return this.decks[i];
+            }
             return null;
         }
-
-        return this.decks[index];
     }
 
     /**
@@ -336,5 +338,14 @@ public class DeckList {
         }
 
         return null;
+    }
+
+    public Boolean contains(int id) {
+        for (Deck d : this.decks) {
+            if (d.getNumber() == id) {
+                return true;
+            }
+        }
+        return false;
     }
 }

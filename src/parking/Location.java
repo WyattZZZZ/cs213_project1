@@ -41,6 +41,27 @@ public enum Location {
         this.zipCode = zipCode;
     }
 
+
+    /**
+     * Finds a location by city name.
+     *
+     * @param city the city name
+     * @return the matching location, or null if no location matches
+     */
+    public static Location findByCity(String city) {
+        if (city == null) {
+            return null;
+        }
+
+        for (Location location : Location.values()) {
+            if (location.city.equalsIgnoreCase(city)) {
+                return location;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Returns the city name.
      *
@@ -66,6 +87,21 @@ public enum Location {
      */
     public String getZipCode() {
         return zipCode;
+    }
+
+    /**
+     * Returns if it is a valid location
+     *
+     * @param city
+     * @return the ZIP code
+     */
+    public static Boolean isValid(String city) {
+        for (Location loc : Location.values()) {
+            if (loc.getCity().equalsIgnoreCase(city)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

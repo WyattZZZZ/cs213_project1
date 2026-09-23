@@ -1,5 +1,7 @@
 package parking;
 
+import org.w3c.dom.html.HTMLObjectElement;
+
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -11,17 +13,21 @@ import java.util.StringTokenizer;
 public class Operation {
 
     /** The list of vehicles registered with the system. */
-    private VehicleList vehicle_list;
+    private VehicleList vehicleList;
 
     /** The list of parking decks maintained by the system. */
-    private DeckList deck_list;
+    private DeckList deckList;
+
+    /** Token number of openning a new deck */
+    private static int OPEN_ARGUMENT_COUNT = 3;
+
 
     /**
      * Creates an operation controller with empty vehicle and deck lists.
      */
     public Operation() {
-        this.vehicle_list = new VehicleList();
-        this.deck_list = new DeckList();
+        this.vehicleList = new VehicleList();
+        this.deckList = new DeckList();
     }
 
     /**
@@ -83,26 +89,30 @@ public class Operation {
      * @param tokens tokens remaining after the command
      */
     private void processAdd(StringTokenizer tokens) {
-        if (tokens.countTokens() != 1) {
+        if (!tokens.hasMoreTokens()) {
             System.out.println(
                     ErrorType.INVALID_COMMAND.format("A")
             );
+            return;
         }
         String plate = tokens.nextToken();
         if (!Vehicle.isValidPlate(plate)) {
             System.out.println(
                     ErrorType.INVALID_PLATE.format(plate)
             );
+            return;
         }
         if (!VehicleList.search(plate)) {
             System.out.println(
                     ErrorType.VEHICLE_ALREADY_REGISTERED.format(plate)
             );
-        } else {
-            Vehicle new_vehicle = new Vehicle(plate);
-            this.vehicle_list.add(new_vehicle);
+            return;
         }
-        return;
+        Vehicle new_vehicle = new Vehicle(plate);
+        this.vehicleList.add(new_vehicle);
+        System.out.println(
+                plate + " registered."
+        );
     }
 
     /**
@@ -112,7 +122,7 @@ public class Operation {
      */
     private void processRemove(StringTokenizer tokens) {
         // TODO: Read and validate plate.
-        if (tokens.countTokens() != 1) {
+        if (!tokens.hasMoreTokens()) {
             System.out.println(
                     ErrorType.INVALID_COMMAND.format("R")
             );
@@ -130,17 +140,17 @@ public class Operation {
             );
         }
         Vehicle template = new Vehicle(plate);
-        if (this.deck_list.findDeckByVehicle(template) != null) {
+        if (this.deckList.findDeckByVehicle(template) != null) {
             System.out.println(
                     ErrorType.VEHICLE_CURRENTLY_PARKED.format(plate)
             );
         }
-        if (this.vehicle_list.getVehicle(template).hasHistory()) {
+        if (this.vehicleList.getVehicle(template).hasHistory()) {
             System.out.println(
                     ErrorType.VEHICLE_HAS_HISTORY.format(plate)
             );
         }
-        this.vehicle_list.remove(template);
+        this.vehicleList.remove(template);
         System.out.println(
                 plate + " unregistered."
         );
@@ -152,9 +162,123 @@ public class Operation {
      * @param tokens tokens remaining after the command
      */
     private void processOpen(StringTokenizer tokens) {
-        // TODO: Validate deck number and check whether it already exists.
-        // TODO: Reopen a closed deck without requiring other tokens.
-        // TODO: For a new deck, validate location, hour, and capacity.
+        String id;
+        if (tokens.hasMoreTokens()) {
+            id = tokens.nextToken();
+        } else {
+            id = "";
+        }
+
+        if (!Deck.isValidDeckNumber(id)) {
+            System.out.println(
+                    ErrorType.INVALID_DECK_NUMBER_OPEN.format(id)
+            );
+            return;
+        }
+
+        int idNumber = Integer.parseInt(id);
+        Deck existingDeck = this.deckList.get(idNumber);
+
+        if (existingDeck != null) {
+            processExistingDeck(existingDeck, id);
+            return;
+        }
+
+        if (tokens.countTokens() != OPEN_ARGUMENT_COUNT) {
+            System.out.println(
+                    ErrorType.OPEN_MISSING_TOKENS.format(id)
+            );
+            return;
+        }
+
+        openNewDeck(id, idNumber, tokens);
+    }
+
+    private void processExistingDeck(Deck deck, String id) {
+        if (deck.isOpen()) {
+            System.out.println(
+                    ErrorType.DECK_ALREADY_OPEN.format(id)
+            );
+            return;
+        }
+
+        deck.setOpen(true);
+        System.out.printf(
+                "Deck#%s - was closed, now reopened.%n",
+                id
+        );
+    }
+
+    private void openNewDeck(
+            String id,
+            int idNumber,
+            StringTokenizer tokens
+    ) {
+        String city = tokens.nextToken();
+        String hourCode = tokens.nextToken();
+        String capacityToken = tokens.nextToken();
+
+        if (!Location.isValid(city)) {
+            System.out.println(
+                    ErrorType.INVALID_LOCATION.format(city)
+            );
+            return;
+        }
+
+        if (!Hour.isValid(hourCode)) {
+            System.out.println(
+                    ErrorType.INVALID_HOUR.format(hourCode)
+            );
+            return;
+        }
+
+        Integer capacity = parseCapacity(capacityToken, id);
+        if (capacity == null) {
+            return;
+        }
+
+        Deck deck = new Deck(idNumber,
+                            Location.findByCity(city),
+                            Hour.getHour(hourCode),
+                            capacity
+                        );
+        this.deckList.open(deck);
+
+        System.out.printf(
+                "Deck#%s opened.%n",
+                id
+        );
+    }
+
+    private Integer parseCapacity(
+            String capacityToken,
+            String id
+    ) {
+        if (!capacityToken.matches("[0-9]+")) {
+            System.out.println(
+                    ErrorType.INVALID_CAPACITY.format(capacityToken)
+            );
+            return null;
+        }
+
+        try {
+            int capacity = Integer.parseInt(capacityToken);
+            if (capacity > Deck.MAXCAPACITY) {
+                System.out.println(
+                        ErrorType.CAPACITY_EXCEEDS_MAXIMUM.format(
+                                capacityToken,
+                                id
+                        )
+                );
+                return null;
+            }
+            return capacity;
+        } catch (NumberFormatException exception) {
+            System.out.println(
+                    ErrorType.INVALID_CAPACITY.format(capacityToken)
+            );
+            return null;
+        }
     }
 
     /**
@@ -163,8 +287,45 @@ public class Operation {
      * @param tokens tokens remaining after the command
      */
     private void processClose(StringTokenizer tokens) {
-        // TODO: Validate deck number, existence, and open status.
-        // TODO: Reject closing when a vehicle remains in the deck.
+        String id = "";
+        if (tokens.hasMoreTokens()) {
+            id = tokens.nextToken();
+        }
+
+        if (!Deck.isValidDeckNumber(id)) {
+            System.out.println(
+                    ErrorType.INVALID_DECK_NUMBER_CHARACTERS.format(id)
+            );
+            return;
+        }
+
+        Deck existingDeck = this.deckList.get(Integer.parseInt(id));
+        if (existingDeck != null) {
+            if (!existingDeck.isOpen()) {
+                System.out.println(
+                        ErrorType.DECK_ALREADY_CLOSED.format(id)
+                );
+                return;
+            }
+        } else {
+            System.out.println(
+                    ErrorType.DECK_NOT_FOUND.format(id)
+            );
+            return;
+        }
+        // TODO: check ErrorType of CANNOT CLOSE SINCE CAR IS STILL PARKING
+        if (existingDeck.getNumParked() > 0) {
+            System.out.println(
+                    "Cannot close"
+            );
+            return;
+        }
+
+        existingDeck.setOpen(false);
+        System.out.printf(
+                "Deck#%s - closed.%n",
+                id
+        );
     }
 
     /**
