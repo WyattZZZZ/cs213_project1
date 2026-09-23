@@ -11,17 +11,17 @@ import java.util.StringTokenizer;
 public class Operation {
 
     /** The list of vehicles registered with the system. */
-    private VehicleList vehicleList;
+    private VehicleList vehicle_list;
 
     /** The list of parking decks maintained by the system. */
-    private DeckList deckList;
+    private DeckList deck_list;
 
     /**
      * Creates an operation controller with empty vehicle and deck lists.
      */
     public Operation() {
-        this.vehicleList = new VehicleList();
-        this.deckList = new DeckList();
+        this.vehicle_list = new VehicleList();
+        this.deck_list = new DeckList();
     }
 
     /**
@@ -83,30 +83,26 @@ public class Operation {
      * @param tokens tokens remaining after the command
      */
     private void processAdd(StringTokenizer tokens) {
-        // TODO: Read plate and validate token count and plate format.
         if (tokens.countTokens() != 1) {
             System.out.println(
                     ErrorType.INVALID_COMMAND.format("A")
             );
         }
-        // TODO: Check vehicleList.contains(), then add the vehicle.
         String plate = tokens.nextToken();
-        if (Vehicle.isValidPlate(plate)) {
-            if (VehicleList.search(plate)) {
-                System.out.println(
-                        plate + " registered."
-                );
-            } else {
-                System.out.println(
-                        ErrorType.VEHICLE_ALREADY_REGISTERED.format(plate)
-                );
-            }
-        } else {
+        if (!Vehicle.isValidPlate(plate)) {
             System.out.println(
                     ErrorType.INVALID_PLATE.format(plate)
             );
         }
-        // TODO: Print the exact expected result.
+        if (!VehicleList.search(plate)) {
+            System.out.println(
+                    ErrorType.VEHICLE_ALREADY_REGISTERED.format(plate)
+            );
+        } else {
+            Vehicle new_vehicle = new Vehicle(plate);
+            this.vehicle_list.add(new_vehicle);
+        }
+        return;
     }
 
     /**
@@ -116,8 +112,38 @@ public class Operation {
      */
     private void processRemove(StringTokenizer tokens) {
         // TODO: Read and validate plate.
+        if (tokens.countTokens() != 1) {
+            System.out.println(
+                    ErrorType.INVALID_COMMAND.format("R")
+            );
+        }
         // TODO: Confirm registration and that the vehicle is not parked.
-        // TODO: Reject a vehicle with history, or remove it.
+        String plate = tokens.nextToken();
+        if (!Vehicle.isValidPlate(plate)) {
+            System.out.println(
+                    ErrorType.INVALID_PLATE.format(plate)
+            );
+        }
+        if (!VehicleList.search(plate)) {
+            System.out.println(
+                    ErrorType.VEHICLE_NOT_FOUND_FOR_REMOVAL.format(plate)
+            );
+        }
+        Vehicle template = new Vehicle(plate);
+        if (this.deck_list.findDeckByVehicle(template) != null) {
+            System.out.println(
+                    ErrorType.VEHICLE_CURRENTLY_PARKED.format(plate)
+            );
+        }
+        if (this.vehicle_list.getVehicle(template).hasHistory()) {
+            System.out.println(
+                    ErrorType.VEHICLE_HAS_HISTORY.format(plate)
+            );
+        }
+        this.vehicle_list.remove(template);
+        System.out.println(
+                plate + " unregistered."
+        );
     }
 
     /**

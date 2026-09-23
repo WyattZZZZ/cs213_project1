@@ -63,6 +63,13 @@ public class DeckList {
     }
 
     /**
+     * Get all decks in deck list
+     */
+    public Deck[] getDecks() {
+        return this.decks;
+    }
+
+    /**
      * Opens a deck or adds it to the array.
      *
      * @param deck the deck to open
@@ -297,5 +304,37 @@ public class DeckList {
         }
 
         System.out.println("** end of list **");
+    }
+
+    /**
+     * Finds the deck in which a vehicle is currently parked.
+     *
+     * @param vehicle the vehicle to locate
+     * @return the deck containing the vehicle,
+     *         or null if the vehicle is not currently parked
+     */
+    public Deck findDeckByVehicle(Vehicle vehicle) {
+        if (vehicle == null) {
+            return null;
+        }
+
+        for (int i = 0; i < this.numDecks; i++) {
+            Parking[] parkings =
+                    this.decks[i].getParkings();
+
+            int numParked =
+                    this.decks[i].getNumParked();
+
+            for (int j = 0; j < numParked; j++) {
+                Vehicle parkedVehicle =
+                        parkings[j].getVehicle();
+
+                if (parkedVehicle.equals(vehicle)) {
+                    return this.decks[i];
+                }
+            }
+        }
+
+        return null;
     }
 }
