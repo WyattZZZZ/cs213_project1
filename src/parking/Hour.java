@@ -10,9 +10,6 @@ public enum Hour {
     HR6("6:30", "18:30", (byte) 6, (byte) 30, (byte) 18, (byte) 30),
     HR7("7:00", "18:00", (byte) 7, (byte) 0, (byte) 18, (byte) 0);
 
-    /** Number of hours in one day. */
-    private static final int HOURS_PER_DAY = 24;
-
     /** Number of minutes in one hour. */
     private static final int MINUTES_PER_HOUR = 60;
 
@@ -133,5 +130,33 @@ public enum Hour {
 
         return currentTime >= openingTime
                 && currentTime <= closingTime;
+    }
+    /** Returns the operating-hours interval used when printing a deck. */
+    @Override
+    public String toString() {
+        return this.startTime + " ~ " + this.endTime;
+    }
+
+    /**
+     * Validates entry or exit against the inclusive operating interval.
+     *
+     * @param timestamp the timestamp to check
+     * @param entering true for entry, false for exit
+     * @throws IllegalArgumentException if the time is outside this interval
+     */
+    public void validate(
+            Timestamp timestamp,
+            boolean entering
+    ) {
+        if (!this.contains(timestamp)) {
+            ErrorType error = entering ? ErrorType.ENTRY_OUTSIDE_OPERATING_HOURS
+                    : ErrorType.EXIT_OUTSIDE_OPERATING_HOURS;
+            throw new IllegalArgumentException(
+                    error.format(
+                            this.startTime,
+                            this.endTime
+                    )
+            );
+        }
     }
 }

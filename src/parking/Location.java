@@ -68,7 +68,7 @@ public enum Location {
      * @return the city name
      */
     public String getCity() {
-        return city;
+        return this.city;
     }
 
     /**
@@ -77,7 +77,7 @@ public enum Location {
      * @return the county name
      */
     public String getCounty() {
-        return county + " County";
+        return this.county;
     }
 
     /**
@@ -86,7 +86,7 @@ public enum Location {
      * @return the ZIP code
      */
     public String getZipCode() {
-        return zipCode;
+        return this.zipCode;
     }
 
     /**

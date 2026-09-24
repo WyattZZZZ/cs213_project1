@@ -20,6 +20,11 @@ public class VehicleList {
         numVehicles = 0;
     }
 
+    /** Returns whether no vehicles are registered. */
+    public boolean isEmpty() {
+        return this.numVehicles == 0;
+    }
+
     /**
      * Checks if a specific license plate exists within a given vehicle list.
      *
@@ -153,5 +158,135 @@ public class VehicleList {
         for (int i = 0; i < numVehicles; i++) {
             vehicles[i].printHistory();
         }
+    }
+
+    /**
+     * Validates and registers a plate.
+     *
+     * @param plate the original plate token
+     * @return the new registered vehicle
+     * @throws IllegalArgumentException if the plate is invalid or already registered
+     */
+    public Vehicle register(String plate) {
+        Vehicle.validatePlate(plate);
+        if (containsPlate(this, plate)) {
+            throw new IllegalArgumentException(
+                    ErrorType.VEHICLE_ALREADY_REGISTERED.format(plate)
+            );
+        }
+        Vehicle vehicle = new Vehicle(plate.toUpperCase());
+        this.add(vehicle);
+        return vehicle;
+    }
+
+    /**
+     * Gets a registered vehicle after validating its plate.
+     *
+     * @param plate the original plate token
+     * @param missing the error to use if no registered vehicle matches
+     * @return the registered vehicle
+     * @throws IllegalArgumentException if the plate is invalid or unregistered
+     */
+    public Vehicle requireVehicle(
+            String plate,
+            ErrorType missing
+    ) {
+        Vehicle.validatePlate(plate);
+        Vehicle vehicle = this.getVehicle(new Vehicle(plate));
+        if (vehicle == null) {
+            throw new IllegalArgumentException(
+                    missing.format(plate)
+            );
+        }
+        return vehicle;
+    }
+
+    /**
+     * Finds a registered vehicle that is not currently in any deck.
+     *
+     * @param plate the original plate token
+     * @param decks the decks to check for current parking
+     * @return the vehicle eligible to enter
+     * @throws IllegalArgumentException if the plate is invalid, absent, or parked
+     */
+    public Vehicle requireEnteringVehicle(
+            String plate,
+            DeckList decks
+    ) {
+        Vehicle vehicle = this.requireVehicle(plate, ErrorType.VEHICLE_NOT_REGISTERED);
+        if (decks.findDeckByVehicle(vehicle) != null) {
+            throw new IllegalArgumentException(
+                    ErrorType.VEHICLE_ALREADY_IN_DECK.format(plate)
+            );
+        }
+        return vehicle;
+    }
+
+    /**
+     * Removes a registered vehicle only if it is not parked and has no history.
+     *
+     * @param plate the original plate token
+     * @param decks the decks to check for current parking
+     * @return the removed vehicle
+     * @throws IllegalArgumentException if the vehicle cannot be removed
+     */
+    public Vehicle unregister(
+            String plate,
+            DeckList decks
+    ) {
+        Vehicle vehicle = this.requireVehicle(plate, ErrorType.VEHICLE_NOT_FOUND_FOR_REMOVAL);
+        if (decks.findDeckByVehicle(vehicle) != null) {
+            throw new IllegalArgumentException(
+                    ErrorType.VEHICLE_CURRENTLY_PARKED.format(plate)
+            );
+        }
+
+        if (vehicle.hasHistory()) {
+            throw new IllegalArgumentException(
+                    ErrorType.VEHICLE_HAS_HISTORY.format(plate)
+            );
+        }
+        this.remove(vehicle);
+        return vehicle;
+    }
+
+    /**
+     * Prints a complete registered-vehicle report.
+     */
+    public void printVehiclesReport() {
+        if (this.isEmpty()) {
+            System.out.println(
+                    ErrorType.VEHICLE_LIST_EMPTY
+            );
+            return;
+        }
+
+        System.out.println(
+                "** List of registered vehicles, ordered by license plate **"
+        );
+        this.printByPlate();
+        System.out.println(
+                "** end of list **"
+        );
+    }
+
+    /**
+     * Prints a complete history report for all registered vehicles.
+     */
+    public void printHistoryReport() {
+        if (this.isEmpty()) {
+            System.out.println(
+                    ErrorType.DECK_LIST_EMPTY
+            );
+            return;
+        }
+
+        System.out.println(
+                "** Parking history for all vehicles, ordered by plate/timestamp **"
+        );
+        this.printHistory();
+        System.out.println(
+                "** end of parking history **"
+        );
     }
 }

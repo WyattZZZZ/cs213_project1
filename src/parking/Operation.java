@@ -1,7 +1,5 @@
 package parking;
 
-import org.w3c.dom.html.HTMLObjectElement;
-
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -13,13 +11,13 @@ import java.util.StringTokenizer;
 public class Operation {
 
     /** The list of vehicles registered with the system. */
-    private VehicleList vehicleList;
+    private final VehicleList vehicleList;
 
     /** The list of parking decks maintained by the system. */
-    private DeckList deckList;
+    private final DeckList deckList;
 
-    /** Token number of openning a new deck */
-    private static int OPEN_ARGUMENT_COUNT = 3;
+    /** Number of data tokens required after a new deck number. */
+    private static final int OPEN_ARGUMENT_COUNT = 3;
 
 
     /**
@@ -38,10 +36,19 @@ public class Operation {
         boolean running = true;
 
         System.out.println(
-                "Parking Management System is in operation.");
+                "Parking Management System is in operation."
+        );
+        System.out.println();
 
         while (running && scanner.hasNextLine()) {
-            running = this.processCommand(scanner.nextLine());
+            String line = scanner.nextLine();
+            try {
+                running = this.processCommand(line);
+            } catch (IllegalArgumentException exception) {
+                System.out.println(
+                        exception.getMessage()
+                );
+            }
         }
 
         scanner.close();
@@ -62,266 +69,123 @@ public class Operation {
         String command = tokens.nextToken();
 
         switch (command) {
-            case "A": this.processAdd(tokens); break;
-            case "R": this.processRemove(tokens); break;
-            case "O": this.processOpen(tokens); break;
-            case "C": this.processClose(tokens); break;
-            case "E": this.processEnter(tokens); break;
-            case "X": this.processExit(tokens); break;
-            case "PP": this.processPrintVehicles(tokens); break;
-            case "PD": this.processPrintDecks(tokens); break;
-            case "PH": this.processPrintHistory(tokens); break;
+            case "A":
+                this.processAdd(tokens);
+                break;
+            case "R":
+                this.processRemove(tokens);
+                break;
+            case "O":
+                this.processOpen(tokens);
+                break;
+            case "C":
+                this.processClose(tokens);
+                break;
+            case "E":
+                this.processEnter(tokens);
+                break;
+            case "X":
+                this.processExit(tokens);
+                break;
+            case "PP":
+                this.vehicleList.printVehiclesReport();
+                break;
+            case "PD":
+                this.processPrintDecks(tokens);
+                break;
+            case "PH":
+                this.processPrintHistory(tokens);
+                break;
             case "Q":
                 System.out.println(
-                        "Parking Management System is terminated.");
+                        "Parking Management System is terminated."
+                );
                 return false;
             default:
                 System.out.println(
-                        ErrorType.INVALID_COMMAND.format(command));
+                        ErrorType.INVALID_COMMAND.format(command)
+                );
                 break;
         }
         return true;
     }
 
     /**
-     * Processes an A command to register a vehicle.
+     * Registers a vehicle and displays the result.
      *
      * @param tokens tokens remaining after the command
      */
     private void processAdd(StringTokenizer tokens) {
-        if (!tokens.hasMoreTokens()) {
-            System.out.println(
-                    ErrorType.INVALID_COMMAND.format("A")
-            );
-            return;
-        }
-        String plate = tokens.nextToken();
-        if (!Vehicle.isValidPlate(plate)) {
-            System.out.println(
-                    ErrorType.INVALID_PLATE.format(plate)
-            );
-            return;
-        }
-        if (!VehicleList.search(plate)) {
-            System.out.println(
-                    ErrorType.VEHICLE_ALREADY_REGISTERED.format(plate)
-            );
-            return;
-        }
-        Vehicle new_vehicle = new Vehicle(plate);
-        this.vehicleList.add(new_vehicle);
+        this.requireArguments(tokens, 1, "A");
+        Vehicle vehicle = this.vehicleList.register(tokens.nextToken());
         System.out.println(
-                plate + " registered."
+                vehicle.getPlate() + " registered."
         );
     }
 
     /**
-     * Processes an R command to unregister a vehicle.
+     * Unregisters a vehicle and displays the result.
      *
      * @param tokens tokens remaining after the command
      */
     private void processRemove(StringTokenizer tokens) {
-        // TODO: Read and validate plate.
-        if (!tokens.hasMoreTokens()) {
-            System.out.println(
-                    ErrorType.INVALID_COMMAND.format("R")
-            );
-        }
-        // TODO: Confirm registration and that the vehicle is not parked.
-        String plate = tokens.nextToken();
-        if (!Vehicle.isValidPlate(plate)) {
-            System.out.println(
-                    ErrorType.INVALID_PLATE.format(plate)
-            );
-        }
-        if (!VehicleList.search(plate)) {
-            System.out.println(
-                    ErrorType.VEHICLE_NOT_FOUND_FOR_REMOVAL.format(plate)
-            );
-        }
-        Vehicle template = new Vehicle(plate);
-        if (this.deckList.findDeckByVehicle(template) != null) {
-            System.out.println(
-                    ErrorType.VEHICLE_CURRENTLY_PARKED.format(plate)
-            );
-        }
-        if (this.vehicleList.getVehicle(template).hasHistory()) {
-            System.out.println(
-                    ErrorType.VEHICLE_HAS_HISTORY.format(plate)
-            );
-        }
-        this.vehicleList.remove(template);
+        this.requireArguments(tokens, 1, "R");
+        Vehicle vehicle = this.vehicleList.unregister(
+                tokens.nextToken(),
+                this.deckList
+        );
         System.out.println(
-                plate + " unregistered."
+                vehicle.getPlate() + " unregistered."
         );
     }
 
     /**
-     * Processes an O command to open or reopen a parking deck.
+     * Opens or reopens a deck using the supplied command data.
      *
      * @param tokens tokens remaining after the command
      */
     private void processOpen(StringTokenizer tokens) {
-        String id;
-        if (tokens.hasMoreTokens()) {
-            id = tokens.nextToken();
-        } else {
-            id = "";
-        }
-
-        if (!Deck.isValidDeckNumber(id)) {
-            System.out.println(
-                    ErrorType.INVALID_DECK_NUMBER_OPEN.format(id)
-            );
-            return;
-        }
-
-        int idNumber = Integer.parseInt(id);
-        Deck existingDeck = this.deckList.get(idNumber);
-
+        String id = tokens.hasMoreTokens() ? tokens.nextToken() : "";
+        int number = Deck.parseNumber(
+                id,
+                ErrorType.INVALID_DECK_NUMBER_OPEN
+        );
+        Deck existingDeck = this.deckList.get(number);
         if (existingDeck != null) {
-            processExistingDeck(existingDeck, id);
+            this.deckList.reopen(existingDeck, id);
+            System.out.printf(
+                    "Deck#%s - was closed, now reopened.%n",
+                    id
+            );
             return;
         }
 
         if (tokens.countTokens() != OPEN_ARGUMENT_COUNT) {
-            System.out.println(
+            throw new IllegalArgumentException(
                     ErrorType.OPEN_MISSING_TOKENS.format(id)
             );
-            return;
         }
-
-        openNewDeck(id, idNumber, tokens);
-    }
-
-    private void processExistingDeck(Deck deck, String id) {
-        if (deck.isOpen()) {
-            System.out.println(
-                    ErrorType.DECK_ALREADY_OPEN.format(id)
-            );
-            return;
-        }
-
-        deck.setOpen(true);
-        System.out.printf(
-                "Deck#%s - was closed, now reopened.%n",
-                id
+        Deck deck = Deck.create(
+                number,
+                tokens.nextToken(),
+                tokens.nextToken(),
+                tokens.nextToken()
         );
-    }
-
-    private void openNewDeck(
-            String id,
-            int idNumber,
-            StringTokenizer tokens
-    ) {
-        String city = tokens.nextToken();
-        String hourCode = tokens.nextToken();
-        String capacityToken = tokens.nextToken();
-
-        if (!Location.isValid(city)) {
-            System.out.println(
-                    ErrorType.INVALID_LOCATION.format(city)
-            );
-            return;
-        }
-
-        if (!Hour.isValid(hourCode)) {
-            System.out.println(
-                    ErrorType.INVALID_HOUR.format(hourCode)
-            );
-            return;
-        }
-
-        Integer capacity = parseCapacity(capacityToken, id);
-        if (capacity == null) {
-            return;
-        }
-
-        Deck deck = new Deck(idNumber,
-                            Location.findByCity(city),
-                            Hour.getHour(hourCode),
-                            capacity
-                        );
         this.deckList.open(deck);
-
         System.out.printf(
                 "Deck#%s opened.%n",
                 id
         );
     }
 
-    private Integer parseCapacity(
-            String capacityToken,
-            String id
-    ) {
-        if (!capacityToken.matches("[0-9]+")) {
-            System.out.println(
-                    ErrorType.INVALID_CAPACITY.format(capacityToken)
-            );
-            return null;
-        }
-
-        try {
-            int capacity = Integer.parseInt(capacityToken);
-            if (capacity > Deck.MAXCAPACITY) {
-                System.out.println(
-                        ErrorType.CAPACITY_EXCEEDS_MAXIMUM.format(
-                                capacityToken,
-                                id
-                        )
-                );
-                return null;
-            }
-            return capacity;
-        } catch (NumberFormatException exception) {
-            System.out.println(
-                    ErrorType.INVALID_CAPACITY.format(capacityToken)
-            );
-            return null;
-        }
-    }
-
     /**
-     * Processes a C command to close a parking deck.
+     * Closes a deck and displays the result.
      *
      * @param tokens tokens remaining after the command
      */
     private void processClose(StringTokenizer tokens) {
-        String id = "";
-        if (tokens.hasMoreTokens()) {
-            id = tokens.nextToken();
-        }
-
-        if (!Deck.isValidDeckNumber(id)) {
-            System.out.println(
-                    ErrorType.INVALID_DECK_NUMBER_CHARACTERS.format(id)
-            );
-            return;
-        }
-
-        Deck existingDeck = this.deckList.get(Integer.parseInt(id));
-        if (existingDeck != null) {
-            if (!existingDeck.isOpen()) {
-                System.out.println(
-                        ErrorType.DECK_ALREADY_CLOSED.format(id)
-                );
-                return;
-            }
-        } else {
-            System.out.println(
-                    ErrorType.DECK_NOT_FOUND.format(id)
-            );
-            return;
-        }
-        // TODO: check ErrorType of CANNOT CLOSE SINCE CAR IS STILL PARKING
-        if (existingDeck.getNumParked() > 0) {
-            System.out.println(
-                    "Cannot close"
-            );
-            return;
-        }
-
-        existingDeck.setOpen(false);
+        String id = tokens.hasMoreTokens() ? tokens.nextToken() : "";
+        this.deckList.close(id);
         System.out.printf(
                 "Deck#%s - closed.%n",
                 id
@@ -329,40 +193,55 @@ public class Operation {
     }
 
     /**
-     * Processes an E command to record a vehicle entering a deck.
+     * Resolves command data in validation order and records entry.
      *
      * @param tokens tokens remaining after the command
      */
     private void processEnter(StringTokenizer tokens) {
-        // TODO: Read deck number, plate, date, and time.
-        // TODO: Validate deck state and vehicle registration/state.
-        // TODO: Validate Date, Timestamp, and operating hours.
-        // TODO: Create Parking and call Deck.enter().
+        this.requireArguments(tokens, 4, "E");
+        Deck deck = this.deckList.requireOpenDeck(tokens.nextToken());
+        deck.validateEntry();
+        Vehicle vehicle = this.vehicleList.requireEnteringVehicle(
+                tokens.nextToken(),
+                this.deckList
+        );
+        Timestamp enter = Timestamp.parse(
+                tokens.nextToken(),
+                tokens.nextToken()
+        );
+        deck.recordEntry(vehicle, enter);
+        System.out.printf(
+                "%s entered Deck#%d on %s%n",
+                vehicle.getPlate(),
+                deck.getNumber(),
+                enter
+        );
     }
 
     /**
-     * Processes an X command to record a vehicle exiting a deck.
+     * Locates the vehicle's deck and records exit.
      *
      * @param tokens tokens remaining after the command
      */
     private void processExit(StringTokenizer tokens) {
-        // TODO: Read plate, date, and time and locate current parking.
-        // TODO: Validate date, time, operating hours, and duration.
-        // TODO: Set exit, remove from Deck, and add Vehicle history.
+        this.requireArguments(tokens, 3, "X");
+        String plate = tokens.nextToken();
+        Deck deck = this.deckList.requireParkedDeck(plate);
+        Timestamp exit = Timestamp.parse(
+                tokens.nextToken(),
+                tokens.nextToken()
+        );
+        Parking parking = deck.recordExit(new Vehicle(plate), exit);
+        System.out.printf(
+                "%s exited Deck#%d on %s%n",
+                parking.getVehicle().getPlate(),
+                deck.getNumber(),
+                exit
+        );
     }
 
     /**
-     * Processes a PP command to print registered vehicles.
-     *
-     * @param tokens tokens remaining after the command
-     */
-    private void processPrintVehicles(StringTokenizer tokens) {
-        // TODO: Print the empty-list message or the required header.
-        // TODO: Call vehicleList.printByPlate() and print the footer.
-    }
-
-    /**
-     * Processes a PD command to print decks or vehicles in one deck.
+     * Selects the deck list or one deck's vehicle report.
      *
      * @param tokens tokens remaining after the command
      */
@@ -372,23 +251,45 @@ public class Operation {
             return;
         }
 
-        // TODO: Validate the optional deck number, existence, and status.
-        // TODO: Call deckList.printVehicles(storedDeck).
+        Deck deck = this.deckList.requireOpenDeck(tokens.nextToken());
+        this.deckList.printVehicles(deck);
     }
 
     /**
-     * Processes a PH command to print parking history.
+     * Selects all vehicles' history or one vehicle's history report.
      *
      * @param tokens tokens remaining after the command
      */
     private void processPrintHistory(StringTokenizer tokens) {
         if (!tokens.hasMoreTokens()) {
-            // TODO: Print the all-history header and footer.
-            this.vehicleList.printHistory();
+            this.vehicleList.printHistoryReport();
             return;
         }
 
-        // TODO: Validate optional plate, existence, and history.
-        // TODO: Print the selected vehicle's history.
+        Vehicle vehicle = this.vehicleList.requireVehicle(
+                tokens.nextToken(),
+                ErrorType.VEHICLE_NOT_FOUND
+        );
+        vehicle.printHistoryReport();
+    }
+
+    /**
+     * Checks command syntax before consuming required data tokens.
+     *
+     * @param tokens tokens remaining after the command
+     * @param count the minimum number of required tokens
+     * @param command the command used in the error message
+     * @throws IllegalArgumentException if data tokens are missing
+     */
+    private void requireArguments(
+            StringTokenizer tokens,
+            int count,
+            String command
+    ) {
+        if (tokens.countTokens() < count) {
+            throw new IllegalArgumentException(
+                    ErrorType.INVALID_COMMAND.format(command)
+            );
+        }
     }
 }

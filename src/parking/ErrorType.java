@@ -116,6 +116,9 @@ public enum ErrorType {
     EXIT_EXCEEDS_TWO_DAYS(
             "Invalid exiting time - exceeds two days."),
 
+    /** The requested vehicle does not exist. */
+    VEHICLE_NOT_FOUND("%s does not exist."),
+
     /** The vehicle has no completed parking history. */
     NO_PARKING_HISTORY(
             "%s - no parking history."),

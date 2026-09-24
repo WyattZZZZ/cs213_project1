@@ -1,8 +1,5 @@
 package parking;
 
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-
 /**
  * Represents a parking deck.
  *
@@ -33,7 +30,6 @@ public class Deck {
 
     /** Whether the deck is open. */
     private boolean open;
-    private ExecutionException executionException;
 
     /**
      * Creates a parking deck.
@@ -127,15 +123,20 @@ public class Deck {
      * @return the index of the vehicle, or -1 if it is not found
      */
     private int find(Vehicle vehicle) {
-        for (int i = 0; i < this.parkings.length; i++){
-            if (Objects.equals(this.parkings[i].getVehicle().getPlate(),
-                    vehicle.getPlate())) {
+        for (int i = 0; i < this.numParked; i++){
+            if (this.parkings[i].getVehicle().equals(vehicle)) {
                 return i;
             }
         }
         return NOTFOUND;
     }
 
+
+    /** Returns the current parking for a vehicle, or null if absent. */
+    public Parking getParking(Vehicle vehicle) {
+        int index = this.find(vehicle);
+        return index == NOTFOUND ? null : this.parkings[index];
+    }
 
     /**
      * Adds a parking activity to this deck.
@@ -206,5 +207,152 @@ public class Deck {
                 + "] ["
                 + this.location.getCounty()
                 + "]";
+    }
+
+    /**
+     * Parses a deck number using the error message for the current command.
+     *
+     * @param token the deck number token
+     * @param error the invalid-number error for this command
+     * @return the parsed number
+     * @throws IllegalArgumentException if the number is malformed or too large
+     */
+    public static int parseNumber(
+            String token,
+            ErrorType error
+    ) {
+        if (isValidDeckNumber(token)) {
+            try {
+                return Integer.parseInt(token);
+            } catch (NumberFormatException exception) {
+                // Out-of-range numbers cannot identify a stored deck.
+            }
+        }
+        throw new IllegalArgumentException(
+                error.format(token)
+        );
+    }
+
+    /**
+     * Parses capacity and checks the maximum allowed capacity.
+     *
+     * @param token the capacity token
+     * @return the valid capacity
+     * @throws IllegalArgumentException if capacity is invalid or exceeds the maximum
+     */
+    public static int parseCapacity(String token) {
+        if (token == null || !token.matches("[0-9]+")) {
+            throw new IllegalArgumentException(
+                    ErrorType.INVALID_CAPACITY.format(token)
+            );
+        }
+
+        try {
+            int capacity = Integer.parseInt(token);
+            if (capacity > MAXCAPACITY) {
+                throw new IllegalArgumentException(
+                        ErrorType.CAPACITY_EXCEEDS_MAXIMUM.format(token)
+                );
+            }
+            return capacity;
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException(
+                    ErrorType.INVALID_CAPACITY.format(token)
+            );
+        }
+    }
+
+    /**
+     * Creates a deck after validating location, hours, and capacity in order.
+     *
+     * @param number the validated deck number
+     * @param city the location token
+     * @param hourCode the operating-hours token
+     * @param capacityToken the capacity token
+     * @return the new open deck
+     * @throws IllegalArgumentException if a supplied property is invalid
+     */
+    public static Deck create(
+            int number,
+            String city,
+            String hourCode,
+            String capacityToken
+    ) {
+        Location location = Location.findByCity(city);
+        if (location == null) {
+            throw new IllegalArgumentException(
+                    ErrorType.INVALID_LOCATION.format(city)
+            );
+        }
+
+        Hour hour = Hour.getHour(hourCode);
+        if (hour == null) {
+            throw new IllegalArgumentException(
+                    ErrorType.INVALID_OPERATION_HOURS.format(hourCode)
+            );
+        }
+        return new Deck(number, location, hour, parseCapacity(capacityToken));
+    }
+
+    /**
+     * Checks whether this deck can accept another vehicle.
+     *
+     * @throws IllegalArgumentException if this deck is closed or full
+     */
+    public void validateEntry() {
+        if (!this.open) {
+            throw new IllegalArgumentException(
+                    ErrorType.DECK_CLOSED_FOR_PARKING.format(this.number)
+            );
+        }
+
+        if (this.numParked == this.parkings.length) {
+            throw new IllegalArgumentException(
+                    ErrorType.DECK_FULL.format(this.number)
+            );
+        }
+    }
+
+    /**
+     * Records entry after the caller checks registration and other decks.
+     *
+     * @param vehicle the registered vehicle
+     * @param timestamp the entry timestamp
+     * @throws IllegalArgumentException if deck state or operating hours prevent entry
+     */
+    public void recordEntry(
+            Vehicle vehicle,
+            Timestamp timestamp
+    ) {
+        this.validateEntry();
+        this.hour.validate(timestamp, true);
+        this.enter(new Parking(vehicle, timestamp));
+    }
+
+    /**
+     * Completes parking, removes it from this deck, and records vehicle history.
+     * All validation happens before any state is changed.
+     *
+     * @param vehicle the vehicle to locate
+     * @param timestamp the exit timestamp
+     * @return the completed parking activity
+     * @throws IllegalArgumentException if the vehicle is absent or exit is invalid
+     */
+    public Parking recordExit(
+            Vehicle vehicle,
+            Timestamp timestamp
+    ) {
+        Parking parking = this.getParking(vehicle);
+        if (parking == null) {
+            throw new IllegalArgumentException(
+                    ErrorType.VEHICLE_NOT_IN_DECK.format(vehicle.getPlate())
+            );
+        }
+        this.hour.validate(timestamp, false);
+        parking.validateExit(timestamp);
+        parking.setExit(timestamp);
+        this.exit(parking);
+        parking.getVehicle().addHistory(parking);
+        return parking;
     }
 }

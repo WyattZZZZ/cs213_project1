@@ -166,4 +166,76 @@ public class Timestamp implements Comparable<Timestamp> {
             System.out.println();
         }
     }
+
+    /**
+     * Parses date, hour, and minute in validation order.
+     *
+     * @param dateToken the calendar date
+     * @param timeToken the hour and minute
+     * @return the parsed timestamp
+     * @throws IllegalArgumentException if a component is invalid
+     */
+    public static Timestamp parse(
+            String dateToken,
+            String timeToken
+    ) {
+        Date date = Date.parse(dateToken);
+        String[] parts = timeToken.split(":", 2);
+        byte hour = parseTimePart(
+                parts[0],
+                HOURS_PER_DAY,
+                ErrorType.INVALID_HOUR
+        );
+        byte minute = parseTimePart(
+                parts.length == 2 ? parts[1] : "",
+                MINUTES_PER_HOUR,
+                ErrorType.INVALID_MINUTE
+        );
+        return new Timestamp(date, hour, minute);
+    }
+
+    /**
+     * Validates a numeric time component before converting it to a byte.
+     *
+     * @param token the component token
+     * @param limit the exclusive upper bound
+     * @param error the error associated with this component
+     * @return the valid component
+     * @throws IllegalArgumentException if the component is invalid
+     */
+    private static byte parseTimePart(
+            String token,
+            int limit,
+            ErrorType error
+    ) {
+        try {
+            int value = Integer.parseInt(token);
+            if (value >= 0 && value < limit) {
+                return (byte) value;
+            }
+        } catch (NumberFormatException exception) {
+            // Malformed components use the same hour/minute error.
+        }
+        throw new IllegalArgumentException(
+                error.format(token)
+        );
+    }
+
+    /**
+     * Returns a timestamp a specified number of calendar days later.
+     *
+     * @param days the nonnegative number of days to add
+     * @return the later timestamp at the same time of day
+     * @throws IllegalArgumentException if days is negative
+     */
+    public Timestamp plusDays(int days) {
+        if (days < 0) {
+            throw new IllegalArgumentException("Days must not be negative.");
+        }
+        Date later = this.date;
+        for (int day = 0; day < days; day++) {
+            later = later.nextDay();
+        }
+        return new Timestamp(later, this.hour, this.minute);
+    }
 }

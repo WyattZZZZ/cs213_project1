@@ -1,7 +1,5 @@
 package parking;
 
-import java.util.Objects;
-
 /**
  * Stores parking decks in a resizable array.
  *
@@ -133,8 +131,8 @@ public class DeckList {
                     == number) {
                 return this.decks[i];
             }
-            return null;
         }
+        return null;
     }
 
     /**
@@ -341,11 +339,103 @@ public class DeckList {
     }
 
     public Boolean contains(int id) {
-        for (Deck d : this.decks) {
-            if (d.getNumber() == id) {
-                return true;
-            }
+        return this.get(id) != null;
+    }
+
+    /**
+     * Returns an existing deck or reports its absence.
+     *
+     * @param token the deck number token
+     * @return the stored deck
+     * @throws IllegalArgumentException if the number is invalid or absent
+     */
+    public Deck requireDeck(String token) {
+        int number = Deck.parseNumber(
+                token,
+                ErrorType.INVALID_DECK_NUMBER_CHARACTERS
+        );
+        Deck deck = this.get(number);
+        if (deck == null) {
+            throw new IllegalArgumentException(
+                    ErrorType.DECK_NOT_FOUND.format(number)
+            );
         }
-        return false;
+        return deck;
+    }
+
+    /**
+     * Returns an existing open deck.
+     *
+     * @param token the deck number token
+     * @return the open deck
+     * @throws IllegalArgumentException if the number is invalid, absent, or closed
+     */
+    public Deck requireOpenDeck(String token) {
+        Deck deck = this.requireDeck(token);
+        if (!deck.isOpen()) {
+            throw new IllegalArgumentException(
+                    ErrorType.DECK_CLOSED_FOR_PARKING.format(deck.getNumber())
+            );
+        }
+        return deck;
+    }
+
+    /**
+     * Validates a plate and finds its current deck without checking registration.
+     *
+     * @param plate the plate token
+     * @return the deck containing this vehicle
+     * @throws IllegalArgumentException if the plate is invalid or is not parked
+     */
+    public Deck requireParkedDeck(String plate) {
+        Vehicle.validatePlate(plate);
+        Deck deck = this.findDeckByVehicle(new Vehicle(plate));
+        if (deck == null) {
+            throw new IllegalArgumentException(
+                    ErrorType.VEHICLE_NOT_IN_DECK.format(plate)
+            );
+        }
+        return deck;
+    }
+
+    /**
+     * Reopens an existing closed deck.
+     *
+     * @param deck the stored deck
+     * @param token the original deck token for error reporting
+     * @throws IllegalArgumentException if the deck is already open
+     */
+    public void reopen(
+            Deck deck,
+            String token
+    ) {
+        if (deck.isOpen()) {
+            throw new IllegalArgumentException(
+                    ErrorType.DECK_ALREADY_OPEN.format(token)
+            );
+        }
+        this.open(deck);
+    }
+
+    /**
+     * Closes a stored deck after checking that it is open and empty.
+     *
+     * @param token the deck number token
+     * @throws IllegalArgumentException if the deck cannot be closed
+     */
+    public void close(String token) {
+        Deck deck = this.requireDeck(token);
+        if (!deck.isOpen()) {
+            throw new IllegalArgumentException(
+                    ErrorType.DECK_ALREADY_CLOSED.format(token)
+            );
+        }
+
+        if (deck.getNumParked() > 0) {
+            throw new IllegalArgumentException(
+                    "Cannot close Deck#" + deck.getNumber() + " - vehicles are still parked."
+            );
+        }
+        this.close(deck);
     }
 }
