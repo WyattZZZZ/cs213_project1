@@ -21,6 +21,21 @@ public class VehicleList {
     }
 
     /**
+     * Checks if a specific license plate exists within a given vehicle list.
+     *
+     * @param vehicleList the VehicleList instance to search
+     * @param plate the license plate string to search for
+     * @return true if the plate exists in the list; false otherwise
+     */
+    public static boolean containsPlate(VehicleList vehicleList, String plate) {
+        if (vehicleList == null || plate == null) {
+            return false;
+        }
+        Vehicle searchTemplate = new Vehicle(plate);
+        return vehicleList.contains(searchTemplate);
+    }
+
+    /**
      * Finds the index of a vehicle in the array.
      *
      * @param vehicle the vehicle object to locate
