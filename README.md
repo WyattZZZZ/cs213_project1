@@ -28,6 +28,7 @@ cs213_project1/
 │       ├── Deck.java
 │       ├── DeckList.java
 │       ├── Location.java
+│       ├── ErrorType.java
 │       └── Hour.java
 └── README.md
 ```
