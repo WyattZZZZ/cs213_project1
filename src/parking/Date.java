@@ -295,4 +295,48 @@ public class Date implements Comparable<Date> {
                             + result);
         }
     }
+
+    /**
+     * Parses a valid calendar date without performing terminal output.
+     *
+     * @param token the date token
+     * @return the parsed date
+     * @throws IllegalArgumentException if the token is not a valid date
+     */
+    public static Date parse(String token) {
+        if (token != null && token.matches("[0-9]+-[0-9]+-[0-9]+")) {
+            String[] parts = token.split("-", -1);
+            try {
+                Date date = new Date(
+                        Integer.parseInt(parts[0]),
+                        Integer.parseInt(parts[1]),
+                        Integer.parseInt(parts[2])
+                );
+                if (date.isValid()) {
+                    return date;
+                }
+            } catch (NumberFormatException exception) {
+                // Out-of-range components are invalid calendar dates.
+            }
+        }
+        throw new IllegalArgumentException(
+                ErrorType.INVALID_DATE.format(token)
+        );
+    }
+
+    /**
+     * Returns the next calendar day without modifying this date.
+     *
+     * @return the next date, including month and year rollover
+     */
+    public Date nextDay() {
+        if (this.day < this.numberOfDays()) {
+            return new Date(this.year, this.month, this.day + 1);
+        }
+
+        if (this.month < DEC) {
+            return new Date(this.year, this.month + 1, MIN_DAY);
+        }
+        return new Date(this.year + 1, JAN, MIN_DAY);
+    }
 }

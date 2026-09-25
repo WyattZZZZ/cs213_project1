@@ -76,13 +76,40 @@ public class Parking {
             return this.vehicle.getPlate()
                     + " [entered: "
                     + this.enter.toString()
-                    + "][exited: None";
+                    + "][exited: null]";
         } else {
             return this.vehicle.getPlate()
                     + " [entered: "
                     + this.enter.toString()
                     + "][exited: "
-                    + this.exit.toString();
+                    + this.exit.toString()
+                    + "]";
+        }
+    }
+
+    /** Maximum permitted parking duration in calendar days. */
+    private static final int MAX_PARKING_DAYS = 2;
+
+    /**
+     * Validates the exit order and the maximum parking duration.
+     *
+     * @param timestamp the proposed exit timestamp
+     * @throws IllegalArgumentException if exit precedes entry or exceeds two days
+     */
+    public void validateExit(Timestamp timestamp) {
+        if (timestamp.compareTo(this.enter) < 0) {
+            throw new IllegalArgumentException(
+                    ErrorType.EXIT_BEFORE_ENTRY.format(
+                            timestamp,
+                            this.enter
+                    )
+            );
+        }
+
+        if (timestamp.compareTo(this.enter.plusDays(MAX_PARKING_DAYS)) > 0) {
+            throw new IllegalArgumentException(
+                    ErrorType.EXIT_EXCEEDS_TWO_DAYS.format()
+            );
         }
     }
 }

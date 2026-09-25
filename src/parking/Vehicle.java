@@ -141,4 +141,38 @@ public class Vehicle {
     public String toString() {
         return plate;
     }
+
+    /**
+     * Validates a plate while preserving the original token in errors.
+     *
+     * @param plate the plate to validate
+     * @throws IllegalArgumentException if the plate format is invalid
+     */
+    public static void validatePlate(String plate) {
+        if (!isValidPlate(plate)) {
+            throw new IllegalArgumentException(
+                    ErrorType.INVALID_PLATE.format(plate)
+            );
+        }
+    }
+
+    /**
+     * Prints this vehicle's history with its heading and footer.
+     */
+    public void printHistoryReport() {
+        if (!this.hasHistory()) {
+            System.out.println(
+                    ErrorType.NO_PARKING_HISTORY.format(this.plate)
+            );
+            return;
+        }
+
+        System.out.println(
+                "** Parking history for " + this.plate + "**"
+        );
+        this.printHistory();
+        System.out.println(
+                "** end of list **"
+        );
+    }
 }
