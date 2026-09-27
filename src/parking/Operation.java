@@ -69,33 +69,15 @@ public class Operation {
         String command = tokens.nextToken();
 
         switch (command) {
-            case "A":
-                this.processAdd(tokens);
-                break;
-            case "R":
-                this.processRemove(tokens);
-                break;
-            case "O":
-                this.processOpen(tokens);
-                break;
-            case "C":
-                this.processClose(tokens);
-                break;
-            case "E":
-                this.processEnter(tokens);
-                break;
-            case "X":
-                this.processExit(tokens);
-                break;
-            case "PP":
-                this.vehicleList.printVehiclesReport();
-                break;
-            case "PD":
-                this.processPrintDecks(tokens);
-                break;
-            case "PH":
-                this.processPrintHistory(tokens);
-                break;
+            case "A": this.processAdd(tokens); break;
+            case "R": this.processRemove(tokens); break;
+            case "O": this.processOpen(tokens); break;
+            case "C": this.processClose(tokens); break;
+            case "E": this.processEnter(tokens); break;
+            case "X": this.processExit(tokens); break;
+            case "PP": this.vehicleList.printVehiclesReport(); break;
+            case "PD": this.processPrintDecks(tokens); break;
+            case "PH": this.processPrintHistory(tokens); break;
             case "Q":
                 System.out.println(
                         "Parking Management System is terminated."

@@ -6,10 +6,16 @@ package parking;
  * @author Ethan Vu
  */
 public class VehicleList {
+    /** Initial capacity and growth amount of the vehicle array. */
     private static final int LENGTH = 4;
+
+    /** Value returned when a vehicle is not found. */
     private static final int NOTFOUND = -1;
 
+    /** Resizable array containing registered vehicles. */
     private Vehicle[] vehicles;
+
+    /** Number of vehicles currently stored. */
     private int numVehicles;
 
     /**
@@ -20,7 +26,11 @@ public class VehicleList {
         numVehicles = 0;
     }
 
-    /** Returns whether no vehicles are registered. */
+    /**
+     * Determines whether no vehicles are registered.
+     *
+     * @return true if the list is empty; false otherwise
+     */
     public boolean isEmpty() {
         return this.numVehicles == 0;
     }

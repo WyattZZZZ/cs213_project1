@@ -6,11 +6,22 @@ package parking;
  * @author wyattzhang
  */
 public enum Location {
+    /** Bridgewater in Somerset County. */
     BRIDGEWATER("Bridgewater", "Somerset", "08807"),
+
+    /** Piscataway in Middlesex County. */
     PISCATAWAY("Piscataway", "Middlesex", "08854"),
+
+    /** Edison in Middlesex County. */
     EDISON("Edison", "Middlesex", "08817"),
+
+    /** Princeton in Mercer County. */
     PRINCETON("Princeton", "Mercer", "08542"),
+
+    /** Morristown in Morris County. */
     MORRISTOWN("Morristown", "Morris", "07960"),
+
+    /** Clark in Union County. */
     CLARK("Clark", "Union", "07066");
 
     /**
@@ -87,21 +98,6 @@ public enum Location {
      */
     public String getZipCode() {
         return this.zipCode;
-    }
-
-    /**
-     * Returns if it is a valid location
-     *
-     * @param city
-     * @return the ZIP code
-     */
-    public static Boolean isValid(String city) {
-        for (Location loc : Location.values()) {
-            if (loc.getCity().equalsIgnoreCase(city)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

@@ -49,9 +49,10 @@ public class Deck {
     }
 
     /**
-     * Check if the ID number is valid
+     * Determines whether a deck-number token contains only digits.
      *
-     * @return the deck number
+     * @param token the deck-number token
+     * @return true if the token contains only digits; false otherwise
      */
     public static boolean isValidDeckNumber(String token) {
         return token != null
@@ -112,6 +113,11 @@ public class Deck {
         return this.open;
     }
 
+    /**
+     * Changes the operating status of this deck.
+     *
+     * @param open true to open the deck; false to close it
+     */
     public void setOpen(boolean open) {
         this.open = open;
     }
@@ -132,7 +138,12 @@ public class Deck {
     }
 
 
-    /** Returns the current parking for a vehicle, or null if absent. */
+    /**
+     * Returns the current parking activity for a vehicle.
+     *
+     * @param vehicle the vehicle to locate
+     * @return the current parking activity, or null if the vehicle is absent
+     */
     public Parking getParking(Vehicle vehicle) {
         int index = this.find(vehicle);
         return index == NOTFOUND ? null : this.parkings[index];

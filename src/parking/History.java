@@ -6,7 +6,10 @@ package parking;
  * @author Ethan Vu
  */
 public class History {
+    /** The parking activity stored in this history node. */
     private Parking parking;
+
+    /** The next node in the vehicle's parking history. */
     private History next;
 
     /**

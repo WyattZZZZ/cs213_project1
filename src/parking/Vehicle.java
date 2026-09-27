@@ -6,10 +6,16 @@ package parking;
  * @author Ethan Vu
  */
 public class Vehicle {
+    /** Required number of characters in a license plate. */
     private static final int PLATE_LENGTH = 7;
+
+    /** Index at which the license-plate hyphen must appear. */
     private static final int FIRST_HYPHEN_INDEX = 3;
 
+    /** The vehicle's license plate. */
     private String plate;
+
+    /** Head of the vehicle's parking-history linked list. */
     private History history;
 
     /**

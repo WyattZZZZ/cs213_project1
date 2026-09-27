@@ -63,7 +63,9 @@ public class DeckList {
     }
 
     /**
-     * Get all decks in deck list
+     * Returns the backing array containing the stored decks.
+     *
+     * @return the deck array
      */
     public Deck[] getDecks() {
         return this.decks;
@@ -338,6 +340,12 @@ public class DeckList {
         return null;
     }
 
+    /**
+     * Determines whether the list contains a deck number.
+     *
+     * @param id the deck number
+     * @return true if a matching deck exists; false otherwise
+     */
     public Boolean contains(int id) {
         return this.get(id) != null;
     }

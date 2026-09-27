@@ -6,18 +6,34 @@ package parking;
  * @author Ethan Vu, Wyatt Zhang
  */
 public enum Hour {
+    /** Operating interval from 5:00 through 21:30. */
     HR5("5:00", "21:30", (byte) 5, (byte) 0, (byte) 21, (byte) 30),
+
+    /** Operating interval from 6:30 through 18:30. */
     HR6("6:30", "18:30", (byte) 6, (byte) 30, (byte) 18, (byte) 30),
+
+    /** Operating interval from 7:00 through 18:00. */
     HR7("7:00", "18:00", (byte) 7, (byte) 0, (byte) 18, (byte) 0);
 
     /** Number of minutes in one hour. */
     private static final int MINUTES_PER_HOUR = 60;
 
+    /** Formatted opening time. */
     private final String startTime;
+
+    /** Formatted closing time. */
     private final String endTime;
+
+    /** Hour component of the opening time. */
     private final byte startHour;
+
+    /** Minute component of the opening time. */
     private final byte startMinute;
+
+    /** Hour component of the closing time. */
     private final byte endHour;
+
+    /** Minute component of the closing time. */
     private final byte endMinute;
 
     /**
